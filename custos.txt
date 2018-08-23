@@ -1,0 +1,14 @@
+data; 
+param n :=8; #numero de cidades 
+
+set I:= A B C D E F; #cidades de 
+set J:= A B C D E F; #cidades para 
+
+#Matriz de Custos:
+param C: 	     A     B     C     D     E     F:=
+			A   -  2.24  10295630.14  8.6  7.62  8.06  
+			B   2.24  -  8062257.75  6708203.93  6.08  7.62  
+			C   10295630.14  8062257.75  -  4.47  6.32  10.44  
+			D   8.6  6708203.93  4.47  -  2.0  6.08  
+			E   7.62  6.08  6.32  2.0  -  4.12  
+			F   8.06  7.62  10.44  6.08  4.12  -  end;
