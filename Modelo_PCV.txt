@@ -1,0 +1,33 @@
+#chamada do problema
+#glpsol -m Modelo_PCV.txt -./exemplos/Israel/custos.txt --output PCV_Results.txt --wcpxlp PCV_Prob.txt
+
+set I; #cidades(ida)
+set J; #cidades(volta)
+               
+param C{i in I, j in J};
+
+param n, integer ; #número de cidades
+
+var x{i in I, j in J},binary; #fluxo
+var y{i in I, j in J}>=0;
+
+minimize custos: (sum{i in I, j in J} C[i,j]*x[i,j]);
+
+s.t.
+
+#restricao01 : sum{i in I} f[i,i]=0;
+restricao02 {i in I}: sum{j in J} x[i,j]=1;
+restricao03 {j in J}: sum{i in I} x[i,j]=1;
+
+#restricao04 {i in I, j in J: i<>j}: f[i,j]+f[j,i]<=1; 
+
+#restrições de subrota
+s.t. cap{i in I, j in J}: y[i,j] <= (n-1) * x[i,j];
+s.t. node{i in I}: sum{j in J} y[j,i] + (if i = 1 then n) = sum{j in J} y[i,j] + 1;
+
+solve;
+
+printf "\n --> Caminhos percorridos \n"  > "resultado_Israel.txt";
+for{i in I, j in J: x[i,j]>0} {  
+	printf "  x[%3d,%3d]= %d   \n", i, j, x[i,j] >> "resultado_Israel.txt";
+}
