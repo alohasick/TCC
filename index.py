@@ -6,7 +6,7 @@ import shapely.geometry as shapgeo
 #METODOS
 
 def getDistancias (locais, terreno) :
-    dist = 0
+    dist, soma = 0, 0
     rota = False
     distancias = dict()
     for k1 in locais:
@@ -14,16 +14,19 @@ def getDistancias (locais, terreno) :
         for k2 in locais:
             if k1 != k2 : #teste pra nao calcular distancia tipo AA
                 if (k2 + k1) not in distancias : # dist AB = dist BA logo pula a iteração
-                    if isRota(locais, terreno, rota, k1, k2): #testar possibilidade de rota
-                        x2, y2 = locais[k2]
-                        dist = math.sqrt((x1-x2)**2 + (y1-y2)**2)
-                        distancias[k1 + k2] = dist
-                    else:
-                        x2, y2 = locais[k2]
-                        dist = math.sqrt((x1-x2)**2 + (y1-y2)**2)
-                        distancias[k1 + k2] = dist*(10**6) #caso a rota seja False multiplicará por um fator alto
+                    x2, y2 = locais[k2]
+                    dist = math.sqrt((x1-x2)**2 + (y1-y2)**2)
+                    distancias[k1 + k2] = dist
+                    soma += dist
                 else:
+                    soma += dist
                     pass
+    for k1 in locais:
+        for k2 in locais:
+            if k1 != k2 : #teste pra nao calcular distancia tipo AA
+                if (k2 + k1) not in distancias : # dist AB = dist BA logo pula a iteração
+                    if not(isRota(locais, terreno, rota, k1, k2)): #testar possibilidade de rota
+                        distancias[k1 + k2] += 10*soma
     return distancias
 
 def setPontos (fname) :
@@ -31,7 +34,7 @@ def setPontos (fname) :
     fhand = open(fname) #ler arquivo
     for line in fhand: 
         line = line.rstrip()
-        chave = re.findall('^[(A-Za-z)]', line) #get key
+        chave = re.findall('^[(A-Za-z0-9)]', line) #get key
         x = re.findall('([0-9]+),', line) #get a from a, b
         y = re.findall(',([0-9]+)', line) #get b from a, b
         pontos[chave[0]] = float(x[0]), float(y[0]) #atribui novo par {key: a, b} ao dicio pontos
@@ -58,19 +61,19 @@ def isRota (locais, terreno, rota, k1, k2) :
 def writeCusto (locais, distancia):
     file = open('custos.txt', 'w')
     linhat, cabecalho, linha, pontos  = '', '', '', ''
-    linha = 'data; \nparam n :=8; #numero de cidades \n\n'
+    linha = 'data; \nparam n :=' + str(len(locais)) + '; #numero de cidades \n\n'
     file.write(linha)
     for ponto in locais:
         pontos = pontos + ' ' + ponto
     linha = 'set I:=' + pontos + '; #cidades de \nset J:=' + pontos + '; #cidades para \n\n#Matriz de Custos:\n'
     file.write(linha)
-    cabecalho = 'param C: \t'
+    cabecalho = 'param C:'
     for local in locais:
         cabecalho = cabecalho + '     ' + local
     file.write(cabecalho + ':=')
     for k1 in locais:
         linhat = ''
-        linhat = '\n\t\t\t' + linhat + k1 + '  '
+        linhat = '\n\t\t' + linhat + k1 + '  '
         for k2 in locais:
             if k1 != k2:
                 if (k2 + k1) not in distancia :
@@ -78,10 +81,10 @@ def writeCusto (locais, distancia):
                 else:
                     linhat = linhat + ' ' + str(round(distancia[k2+k1], 2)) + ' '
             else:
-                linhat = linhat + ' - '
+                linhat = linhat + ' 0 '
         linhat = linhat
-        file.write(linhat + " \r")
-    file.write('end;')
+        file.write(linhat)
+    file.write(';\n end;')
     file.close()
     return file
 #MAIN
